@@ -17,7 +17,7 @@ class Copier:
 
     # Construct a list of files to copy excluding ones I don't want to copy_____________________________________________
     def make_list(self):
-        excluded_files = [".git", ".idea", "role-playing-game", "calorie counter", "canvas_testing"]
+        excluded_files = [".git", ".idea", "role-playing-game", "calorie counter", "canvas_testing", "README.md"]
         for file in self.source_folder:
             if file not in excluded_files:
                 self.source_list.append(file)
@@ -25,7 +25,7 @@ class Copier:
     # Copy the source file to the destination folder____________________________________________________________________
     def copy_file(self, source_path, destination_path):
         if os.path.isdir(source_path):
-            os.rmdir(destination_path)
+            shutil.rmtree(destination_path)
             shutil.copytree(source_path, destination_path)
         else:
             shutil.copy2(source_path, self.destination_path_base)
