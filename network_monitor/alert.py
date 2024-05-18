@@ -29,8 +29,9 @@ class EmailAlert:
         self.sender_email = "pagelklayton@gmail.com"
 
     def send_alert(self, subject, message):
+        email = "pagelklayton@gmail.com"
         self.mailer["From"] = self.sender_email
-        self.mailer["To"] = "pagelklayton@gmail.com"
+        self.mailer["To"] = email
         self.mailer["Subject"] = subject
         self.mailer.set_content(message)
 

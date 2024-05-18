@@ -33,8 +33,8 @@ class NetworkMonitor:
         self.load_json()
 
         # Use different threads to ping each address_______
-        for index in range(256):
-            threading.Thread(target=lambda: send(IP(dst=f"192.168.1.{index}") / ICMP(), verbose=0)).start()
+        for index in range(2):
+            threading.Thread(target=lambda: send(IP(dst=f"192.168.10.{index}") / ICMP(), verbose=0)).start()
 
         # wait for the pings to finish_____________________
         time.sleep(5)
@@ -46,12 +46,14 @@ class NetworkMonitor:
         try:
             ip_connection = self.addresses[data[0]].split()
         except KeyError:
-            self.alert.send_alert("New Device Connected",  data[0])
+            if self.check_filter(data[0]):
+                self.alert.send_alert("New Device Connected",  data[0])
             self.addresses[data[0]] = f"{data[1]} {attempts} {data[0]}"
             ip_connection = self.addresses[data[0]].split()
 
         if ip_connection[1] == "-1":
-            self.alert.send_alert("Device Reconnected", ip_connection[2])
+            if self.check_filter(data[0]):
+                self.alert.send_alert("Device Reconnected", ip_connection[2])
         self.addresses[data[0]] = f"{data[1]} {attempts} {ip_connection[2]}"
 
     # Load all previously seen addresses into the address dictionary____________________________________________________
@@ -75,7 +77,7 @@ class NetworkMonitor:
 
     # check the filter for the device and return weather or not an alert should be sent_________________________________
     def check_filter(self, mac_address):
-        if self.filter[mac_address]:
+        if mac_address in self.filter:
             return True
         else:
             return False
@@ -97,7 +99,8 @@ class NetworkMonitor:
 
             # checks if the connection has dropped off_____
             if ip_connection[1] == 0:
-                self.alert.send_alert("Device Disconnected", ip_connection[2])
+                if self.check_filter(address):
+                    self.alert.send_alert("Device Disconnected", ip_connection[2])
                 self.addresses[address] = f"{ip_connection[0]} {-1} {ip_connection[2]}"
             elif ip_connection[1] < 0:
                 pass
