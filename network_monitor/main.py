@@ -2,6 +2,9 @@ import time
 import threading
 import json
 from scapy.all import *
+from config import *
+
+from alert import EmailAlert
 
 
 # A class for monitoring the network and reporting whenever a device is connected or disconnected_______________________
@@ -13,6 +16,10 @@ class NetworkMonitor:
         # a dictionary to hold all found addresses_________
         self.addresses = {}
         self.sniffer = None
+        self.filter = self.load_filter()
+
+        # Discord alert system_____________________________
+        self.alert = EmailAlert()
 
         # Start the sniffer and run the program____________
         self.start_sniffing()
@@ -36,10 +43,16 @@ class NetworkMonitor:
     def capture(self, pkt):
         data = pkt.sprintf("%Ether.src% %IP.src%").split(" ")
 
-        ip_connection = self.addresses[data[0]].split()
+        try:
+            ip_connection = self.addresses[data[0]].split()
+        except KeyError:
+            self.alert.send_alert("New Device Connected",  data[0])
+            self.addresses[data[0]] = f"{data[1]} {attempts} {data[0]}"
+            ip_connection = self.addresses[data[0]].split()
+
         if ip_connection[1] == "-1":
-            print(f"{ip_connection[0]} Reconnected")
-        self.addresses[data[0]] = f"{data[1]} {3}"
+            self.alert.send_alert("Device Reconnected", ip_connection[2])
+        self.addresses[data[0]] = f"{data[1]} {attempts} {ip_connection[2]}"
 
     # Load all previously seen addresses into the address dictionary____________________________________________________
     def load_json(self):
@@ -54,6 +67,18 @@ class NetworkMonitor:
             f.close()
 
         print("Saving Addresses")
+
+    # load the filter json file to show what devices showed alert when disconnected_____________________________________
+    def load_filter(self):
+        with open('filter.json', 'r') as f:
+            return json.load(f)
+
+    # check the filter for the device and return weather or not an alert should be sent_________________________________
+    def check_filter(self, mac_address):
+        if self.filter[mac_address]:
+            return True
+        else:
+            return False
 
     # Start the packet sniffer only capturing ICMP replies______________________________________________________________
     def start_sniffing(self):
@@ -72,12 +97,12 @@ class NetworkMonitor:
 
             # checks if the connection has dropped off_____
             if ip_connection[1] == 0:
-                print(f"{ip_connection[0]}: Disconnected")
-                self.addresses[address] = f"{ip_connection[0]} {-1}"
+                self.alert.send_alert("Device Disconnected", ip_connection[2])
+                self.addresses[address] = f"{ip_connection[0]} {-1} {ip_connection[2]}"
             elif ip_connection[1] < 0:
                 pass
             else:
-                self.addresses[address] = f"{ip_connection[0]} {ip_connection[1]}"
+                self.addresses[address] = f"{ip_connection[0]} {ip_connection[1]} {ip_connection[2]}"
 
     # Continuously run the program______________________________________________________________________________________
     def run(self):
@@ -86,7 +111,7 @@ class NetworkMonitor:
         self.check_connection_drop()
         self.save_json()
 
-        time.sleep(5)
+        time.sleep(attempt_interval_seconds)
         self.run()
 
 
