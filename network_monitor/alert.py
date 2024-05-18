@@ -23,20 +23,20 @@ class EmailAlert:
     def __init__(self):
         load_dotenv()
 
-        self.mailer = EmailMessage()
-
         self.password = os.getenv("EMAIL_KEY")
         self.sender_email = "pagelklayton@gmail.com"
 
     def send_alert(self, subject, message):
+        mailer = EmailMessage()
         email = "pagelklayton@gmail.com"
-        self.mailer["From"] = self.sender_email
-        self.mailer["To"] = email
-        self.mailer["Subject"] = subject
-        self.mailer.set_content(message)
+
+        mailer["From"] = self.sender_email
+        mailer["To"] = email
+        mailer["Subject"] = subject
+        mailer.set_content(message)
 
         context = ssl.create_default_context()
 
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
             smtp.login(self.sender_email, self.password)
-            smtp.sendmail(self.sender_email, email, self.mailer.as_string())
+            smtp.sendmail(self.sender_email, email, mailer.as_string())

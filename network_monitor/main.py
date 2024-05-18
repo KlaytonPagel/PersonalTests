@@ -47,14 +47,14 @@ class NetworkMonitor:
             ip_connection = self.addresses[data[0]].split()
         except KeyError:
             if self.check_filter(data[0]):
-                self.alert.send_alert("New Device Connected",  data[0])
-            self.addresses[data[0]] = f"{data[1]} {attempts} {data[0]}"
+                threading.Thread(target=lambda: self.alert.send_alert("New Device Connected",  data[0])).start()
+            self.addresses[data[0]] = f"{data[1]} {attempts+1} {data[0]}"
             ip_connection = self.addresses[data[0]].split()
 
         if ip_connection[1] == "-1":
             if self.check_filter(data[0]):
-                self.alert.send_alert("Device Reconnected", ip_connection[2])
-        self.addresses[data[0]] = f"{data[1]} {attempts} {ip_connection[2]}"
+                threading.Thread(target=lambda: self.alert.send_alert("Device Reconnected", ip_connection[2])).start()
+        self.addresses[data[0]] = f"{data[1]} {attempts+1} {ip_connection[2]}"
 
     # Load all previously seen addresses into the address dictionary____________________________________________________
     def load_json(self):
@@ -100,7 +100,7 @@ class NetworkMonitor:
             # checks if the connection has dropped off_____
             if ip_connection[1] == 0:
                 if self.check_filter(address):
-                    self.alert.send_alert("Device Disconnected", ip_connection[2])
+                    threading.Thread(target=lambda: self.alert.send_alert("Device Disconnected", ip_connection[2])).start()
                 self.addresses[address] = f"{ip_connection[0]} {-1} {ip_connection[2]}"
             elif ip_connection[1] < 0:
                 pass

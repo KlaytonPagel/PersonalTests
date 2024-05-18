@@ -1,4 +1,4 @@
-attempts = 3
+attempts = 2
 attempt_interval_seconds = 5
 
 
