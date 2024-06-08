@@ -1,2 +1,5 @@
 
 network_monitor/.env
+*.iml
+*.xml
+*.pyc

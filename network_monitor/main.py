@@ -33,8 +33,8 @@ class NetworkMonitor:
         self.load_json()
 
         # Use different threads to ping each address_______
-        for index in range(2):
-            threading.Thread(target=lambda: send(IP(dst=f"192.168.10.{index}") / ICMP(), verbose=0)).start()
+        for index in range(256):
+            threading.Thread(target=lambda: send(IP(dst=f"192.168.1.{index}") / ICMP(), verbose=0)).start()
 
         # wait for the pings to finish_____________________
         time.sleep(5)
@@ -46,14 +46,13 @@ class NetworkMonitor:
         try:
             ip_connection = self.addresses[data[0]].split()
         except KeyError:
-            if self.check_filter(data[0]):
-                threading.Thread(target=lambda: self.alert.send_alert("New Device Connected",  data[0])).start()
+            threading.Thread(target=lambda: self.alert.send_alert("New Device Connected",  data[0])).start()
             self.addresses[data[0]] = f"{data[1]} {attempts+1} {data[0]}"
             ip_connection = self.addresses[data[0]].split()
 
         if ip_connection[1] == "-1":
             if self.check_filter(data[0]):
-                threading.Thread(target=lambda: self.alert.send_alert("Device Reconnected", ip_connection[2])).start()
+                threading.Thread(target=lambda: self.alert.send_alert("Device Reconnected", f"{ip_connection[2]} {data[0]}")).start()
         self.addresses[data[0]] = f"{data[1]} {attempts+1} {ip_connection[2]}"
 
     # Load all previously seen addresses into the address dictionary____________________________________________________
@@ -100,7 +99,7 @@ class NetworkMonitor:
             # checks if the connection has dropped off_____
             if ip_connection[1] == 0:
                 if self.check_filter(address):
-                    threading.Thread(target=lambda: self.alert.send_alert("Device Disconnected", ip_connection[2])).start()
+                    threading.Thread(target=lambda: self.alert.send_alert("Device Disconnected", f"{ip_connection[2]} {address}")).start()
                 self.addresses[address] = f"{ip_connection[0]} {-1} {ip_connection[2]}"
             elif ip_connection[1] < 0:
                 pass
