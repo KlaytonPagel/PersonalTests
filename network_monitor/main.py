@@ -109,12 +109,12 @@ class NetworkMonitor:
     # Continuously run the program______________________________________________________________________________________
     def run(self):
 
-        self.send_pings()
-        self.check_connection_drop()
-        self.save_json()
+        while True:
+            self.send_pings()
+            self.check_connection_drop()
+            self.save_json()
 
-        time.sleep(attempt_interval_seconds)
-        self.run()
+            time.sleep(attempt_interval_seconds)
 
 
 NetworkMonitor()

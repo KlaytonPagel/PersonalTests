@@ -1,5 +1,6 @@
 
-network_monitor/.env
+*.env
 *.iml
 *.xml
 *.pyc
+.idea
