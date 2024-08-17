@@ -1,0 +1,10 @@
+[Unit]
+After=network.target
+
+[Service]
+ExecStart=python3 /opt/network_monitor_v2/main.py
+Restart=always
+WorkingDirectory=/opt/network_monitor_v2
+
+[Install]
+WantedBy=multi-user.target
