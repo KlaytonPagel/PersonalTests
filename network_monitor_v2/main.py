@@ -15,8 +15,11 @@ class NetworkMonitor:
 
     # pull all known devices from the json file and load into memory_______________________________
     def get_addresses(self):
-        with open('network_monitor.json', 'r') as file:
-            self.addresses = json.load(file)
+        try:
+            with open('network_monitor.json', 'r') as file:
+                self.addresses = json.load(file)
+        except FileNotFoundError:
+            self.set_json()
 
     # send a singular ping to the specified address then parse the result and handle properly______
     def send_ping(self, address):
