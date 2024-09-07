@@ -1,15 +1,17 @@
 #!/home/kpagel/Documents/drive_sync/bin/python3
 
 import os.path
+import io
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 
 def check_token() -> str:
@@ -34,7 +36,7 @@ def check_token() -> str:
 
     return creds
 
-def get_children(service, fileId, path='') -> []:
+def get_children(service, fileId, path='Saved_Files/') -> []:
     results = (
         service.files()
         .list(q=f"parents = '{fileId}'")
@@ -45,10 +47,26 @@ def get_children(service, fileId, path='') -> []:
             get_children(service, child['id'], f"{path}{child['name']}/")
         else:
             print(f"{path}{child['name']}")
-            download_item(service, child['id'])
+            if not os.path.exists(path):
+                os.makedirs(path)
+            download_item(service, child['id'], f"{path}{child['name']}")
 
-def download_item(service, fileId) -> None:
-    pass
+def download_item(service, fileId, path) -> None:
+    request = (service.files().get_media(fileId=fileId))
+
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fd=fh, request=request)
+    done = False
+
+    while not done:
+        status, done = downloader.next_chunk()
+        print("%", end='')
+
+    fh.seek(0)
+
+    with open(path, 'wb') as file:
+        file.write(fh.read())
+        file.close()
 
 def main():
     creds = check_token()
