@@ -34,7 +34,20 @@ def check_token() -> str:
 
     return creds
 
-def get_directory(service, fileId) -> []:
+def get_children(service, fileId, path='') -> []:
+    results = (
+        service.files()
+        .list(q=f"parents = '{fileId}'")
+        .execute()
+    )
+    for child in results.get('files', []):
+        if child['mimeType'] == "application/vnd.google-apps.folder":
+            get_children(service, child['id'], f"{path}{child['name']}/")
+        else:
+            print(f"{path}{child['name']}")
+            download_item(service, child['id'])
+
+def download_item(service, fileId) -> None:
     pass
 
 def main():
@@ -48,23 +61,8 @@ def main():
             .list(q="name = 'Saved_Files'")
             .execute()
         )
-        items = results.get("files", [])
-
-        if not items:
-          print("No files found.")
-          return
-        print("Files:")
-        for item in items:
-            print(f"{item['name']} {item['id']}")
-            item_id = item['id']
-            results = (
-                  service.files()
-                  .list(q=f"parents = '{item_id}'")
-                  .execute()
-                  )
-        children = results.get("files", [])
-        for child in children:
-            print(child)
+        root_folder_id = results.get("files", [])[0]['id']
+        get_children(service, root_folder_id)
     except HttpError as error:
         print(f"An error occurred: {error}")
 
