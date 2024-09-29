@@ -15,6 +15,7 @@ def main() -> None:
         
     displayTotal(ledger)
 
+
 def displayIntro() -> None:
     print("Enter a number to add it to the ledger")
     print("Enter the number 0 To remove the last item")
