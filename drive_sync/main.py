@@ -9,6 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaFileUpload
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/drive"]
@@ -46,7 +47,6 @@ def get_children(service, fileId, path='Saved_Files/') -> []:
         if child['mimeType'] == "application/vnd.google-apps.folder":
             get_children(service, child['id'], f"{path}{child['name']}/")
         else:
-            print(f"{path}{child['name']}")
             if not os.path.exists(path):
                 os.makedirs(path)
             download_item(service, child['id'], f"{path}{child['name']}")
@@ -60,13 +60,19 @@ def download_item(service, fileId, path) -> None:
 
     while not done:
         status, done = downloader.next_chunk()
-        print("%", end='')
 
     fh.seek(0)
 
+    print(f"Downloading: {path}")
     with open(path, 'wb') as file:
         file.write(fh.read())
         file.close()
+
+def upload_item(service, file_path):
+    meta_data = {'name': f"{file_path.split('/')[-1]}"}
+    media = MediaFileUpload(file_path)
+    service.files().create(body=meta_data, media_body=media).execute()
+    print(f"Uploaded: {file_path}")
 
 def main():
     creds = check_token()
@@ -80,7 +86,14 @@ def main():
             .execute()
         )
         root_folder_id = results.get("files", [])[0]['id']
-        get_children(service, root_folder_id)
+        # get_children(service, root_folder_id)
+
+        results = (
+            service.files()
+            .watch(fileId=root_folder_id)
+            .execute()
+        )
+        print(results)
     except HttpError as error:
         print(f"An error occurred: {error}")
 
