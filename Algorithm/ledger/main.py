@@ -1,15 +1,19 @@
 
 
 def main() -> None:
+    displayIntro()
     ledger = []
 
     loopTimes = int(input("Enter the amount of items >> "))
-    for i in range(loopTimes - 1):
+    for i in range(loopTimes):
         userIn = int(input(">> "))
 
         if not userIn:
             ledger.pop(-1)
-
+            
+        ledger.append(userIn)
+        
+    displayTotal(ledger)
 
 def displayIntro() -> None:
     print("Enter a number to add it to the ledger")
@@ -17,12 +21,12 @@ def displayIntro() -> None:
     print("Enter q to quit")
 
 
-def calc(ledger: list) -> int:
+def displayTotal(ledger: list) -> None:
     sum = 0
     for item in ledger:
         sum += int(item)
 
-    return sum
+    print(f"The total is: {sum}")
 
 
 if __name__ == "__main__":
